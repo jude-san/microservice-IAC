@@ -1,0 +1,18 @@
+# - name: Printing a Secret
+#   hosts: localhost
+#   vars:
+#     tasks_name: "Printing a Secret"
+#   vars_files:
+#     - database.yml
+#   tasks:
+#     - name: Print the secret
+#       ansible.builtin.debug:
+#         msg: "Username {{ user }} and Password {{ password }}"
+
+# - name: Setup Common Packages
+#   ansible.builtin.import_playbook: plays/common.yml
+# - name: Setup Jenkins
+#   ansible.builtin.import_playbook: plays/jenkins.yml
+
+- name: Setup Docker and important playbook
+  ansible.builtin.import_playbook: plays/web.yml

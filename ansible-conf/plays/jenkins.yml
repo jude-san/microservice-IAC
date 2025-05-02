@@ -1,0 +1,5 @@
+- name: Configure and Install Jenkins in Single Node Mode
+  hosts: aws_jenkins
+  become: true
+  roles:
+    - ../roles/jenkins

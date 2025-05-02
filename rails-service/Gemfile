@@ -1,0 +1,11 @@
+source 'https://rubygems.org'
+gem 'rails', '~> 7.1.0'
+
+# Add missing important gems
+gem 'bootsnap', require: false
+# gem 'pg'           # if you're using PostgreSQL
+# gem 'puma'         # web server
+# gem 'sass-rails', '>= 6'  # for stylesheets if using SASS
+# gem 'webpacker'    # for managing JS/CSS if not using importmaps
+gem 'puma', '~> 6.0'
+gem 'sqlite3', '~> 1.4' # for development and test environments

@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ .Values.pythonService.label.app }}
+  name: {{ .Values.pythonService.name }}
+  namespace: {{ .Values.pythonService.namespace }}
+spec:
+  replicas: {{ .Values.pythonService.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.pythonService.label.app }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.pythonService.label.app }}
+    spec:
+      containers:
+        - image: "{{ .Values.pythonService.image }}:{{ .Values.pythonService.tag }}"
+          name: {{ .Values.pythonService.name }}
+          ports:
+            - containerPort: {{ .Values.pythonService.port }}

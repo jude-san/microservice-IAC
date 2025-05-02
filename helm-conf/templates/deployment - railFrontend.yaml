@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ .Values.railsService.label.app }}
+  name: {{ .Values.railsService.name }}
+  namespace: {{ .Values.railsService.namespace }}
+spec:
+  replicas: {{ .Values.railsService.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.railsService.label.app }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.railsService.label.app }}
+    spec:
+      containers:
+        - image: "{{ .Values.railsService.image }}:{{ .Values.railsService.tag }}"
+          name: {{ .Values.railsService.name }}
+          ports:
+            - containerPort: {{ .Values.railsService.port }}

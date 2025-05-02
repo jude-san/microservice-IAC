@@ -1,0 +1,25 @@
+- name: Install Common Packages
+  hosts: all
+  become: true
+  roles:
+    - ../roles/common
+  tags:
+    - jenkins-docker
+
+- name: Gather Facts and Print Installed Software
+  hosts: all
+  tasks:
+    - name: Print OS Information
+      ansible.builtin.debug:
+        msg: "OS Information: {{ ansible_distribution }} {{ ansible_distribution_version }}"
+    - name: Print Installed Docker Version
+      ansible.builtin.command:
+        cmd: docker --version
+      register: docker_version
+      ignore_errors: true
+      changed_when: false
+    - name: Print Docker Version
+      ansible.builtin.debug:
+        msg: "Docker Version: {{ docker_version.stdout }}"
+  tags:
+    - jenkins-docker

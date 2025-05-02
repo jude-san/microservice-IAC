@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ .Values.goService.label.app }}
+  name: {{ .Values.goService.name }}
+  namespace: {{ .Values.goService.namespace }}
+spec:
+  replicas: {{ .Values.goService.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.goService.label.app }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.goService.label.app }}
+    spec:
+      containers:
+        - image: "{{ .Values.goService.image }}:{{ .Values.goService.tag }}"
+          name: {{ .Values.goService.name }}
+          ports:
+            - containerPort: {{ .Values.goService.port }}

@@ -1,0 +1,66 @@
+---
+# tasks file for roles/web
+# - name: Deploy Nginx Container
+#   community.docker.docker_container:
+#     name: nginx
+#     image: "nginx:{{ web_nginx_version }}"
+#     ports:
+#       - "80:80"
+#     state: started
+#     volumes:
+#       - "/etc/nginx/nginx.conf:/etc/nginx/nginx.conf"
+#     restart_policy: always
+#   become: true
+#   notify: Restart Nginx
+
+#### aded from you know where
+- name: Update apt
+  apt:
+    update_cache: yes
+    force_apt_get: yes
+    cache_valid_time: 3600
+
+- name: Install required packages
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+    state: present
+
+- name: Add Docker GPG key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Add Docker repository
+  apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    state: present
+    filename: docker
+
+- name: Install Docker
+  apt:
+    name: docker-ce
+    state: latest
+    update_cache: yes
+
+- name: Enable and start Docker
+  systemd:
+    name: docker
+    enabled: yes
+    state: started
+
+- name: Add current user to docker group
+  user:
+    name: "{{ ansible_user }}"
+    groups: docker
+    append: yes
+
+- name: Installing K8s With Snap
+  community.general.snap:
+    name: k8s
+    state: present
+    classic: true

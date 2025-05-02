@@ -1,0 +1,16 @@
+---
+# vars file for roles/jenkins
+jenkins_java_package: openjdk-21-jdk
+jenkins_repo_key_url: https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+jenkins_repo: deb https://pkg.jenkins.io/debian-stable binary/
+jenkins_home: /var/lib/jenkins
+jenkins_http_port: 8080
+jenkins_plugins:
+  - git
+  - pipeline
+  - docker
+  - ansible
+  - credentials
+  - blueocean
+jenkins_admin_username: admin
+jenkins_admin_password: securepassword

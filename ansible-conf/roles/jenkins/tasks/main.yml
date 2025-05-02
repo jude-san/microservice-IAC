@@ -1,0 +1,138 @@
+---
+# tasks file for roles/jenkins
+- name: Install Java
+  ansible.builtin.apt:
+    name: "{{ jenkins_java_package }}"
+    state: absent
+    update_cache: true
+  tags:
+    - jenkins-bare-metal
+
+- name: Add Jenkins repository key
+  ansible.builtin.apt_key:
+    url: "{{ jenkins_repo_key_url }}"
+    state: absent
+  tags:
+    - jenkins-bare-metal
+
+- name: Add Jenkins repository
+  ansible.builtin.apt_repository:
+    repo: "{{ jenkins_repo }}"
+    state: absent
+  tags:
+    - jenkins-bare-metal
+
+- name: Install Jenkins
+  ansible.builtin.apt:
+    name: jenkins
+    state: absent
+    update_cache: true
+  tags:
+    - jenkins-bare-metal
+
+- name: Configure Jenkins port
+  ansible.builtin.lineinfile:
+    path: /etc/default/jenkins
+    regexp: '^HTTP_PORT='
+    line: "HTTP_PORT={{ jenkins_http_port }}"
+  notify: Restart jenkins
+  tags:
+    - jenkins-bare-metal
+
+- name: Ensure Jenkins is started and enabled
+  ansible.builtin.service:
+    name: jenkins
+    state: started
+    enabled: true
+  tags:
+    - jenkins-bare-metal
+
+- name: Wait for Jenkins to start up
+  ansible.builtin.uri:
+    url: "http://localhost:{{ jenkins_http_port }}/login"
+    status_code: 200
+  register: result
+  until: result.status == 200
+  retries: 60
+  delay: 5
+  tags:
+    - jenkins-bare-metal
+
+- name: Get Jenkins initial admin password
+  ansible.builtin.slurp:
+    src: /var/lib/jenkins/secrets/initialAdminPassword
+  register: jenkins_admin_password_file
+  changed_when: false
+  tags:
+    - jenkins-bare-metal
+
+# - name: Enable CSRF protection
+#   become: true
+#   community.general.jenkins_script:
+#     script: |
+#       import jenkins.model.*
+#       import hudson.security.csrf.*
+
+#       def instance = Jenkins.getInstance()
+#       def csrf = new DefaultCrumbIssuer(true)
+#       instance.setCrumbIssuer(csrf)
+#       instance.save()
+#   changed_when: false
+#   notify: Restart jenkins
+
+# - name: Obtain CSRF token
+#   become: true
+#   ansible.builtin.uri:
+#     url: "http://localhost:{{ jenkins_http_port }}/crumbIssuer/api/json"
+#     user: "{{ jenkins_admin_username }}"
+#     password: "{{ jenkins_admin_password }}"
+#     force_basic_auth: true
+#     return_content: true
+#   register: csrf_token
+
+# - name: Install Jenkins plugins
+#   become: true
+#   community.general.jenkins_plugin:
+#     name: "{{ item }}"
+#     url_password: "{{ jenkins_admin_password_file.content | b64decode }}"
+#     url: "http://localhost:{{ jenkins_http_port }}"
+#     with_dependencies: false
+#   with_items: "{{ jenkins_plugins }}"
+#   notify: Restart jenkins
+
+# - name: Create Jenkins admin user
+#   community.general.jenkins_script:
+#     script: |
+#       import jenkins.model.*
+#       import hudson.security.*
+
+#       def instance = Jenkins.getInstance()
+#       def hudsonRealm = new HudsonPrivateSecurityRealm(false)
+#       hudsonRealm.createAccount("{{ jenkins_admin_username }}", "{{ jenkins_admin_password }}")
+#       instance.setSecurityRealm(hudsonRealm)
+
+#       def strategy = new FullControlOnceLoggedInAuthorizationStrategy()
+#       strategy.setAllowAnonymousRead(false)
+#       instance.setAuthorizationStrategy(strategy)
+
+#       instance.save()
+#       url_username: admin
+#       url_password: "{{ jenkins_admin_password_file.stdout }}"
+#       url: "http://localhost:{{ jenkins_http_port }}"
+#   notify: Restart jenkins
+
+- name: Install Jenkins in Docker
+  community.docker.docker_container:
+    name: jenkins
+    image: jenkins/jenkins:lts
+    state: started
+    restart_policy: always
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+    # env:
+    #   JAVA_OPTS: "-Djenkins.install.runSetupWizard=false"
+  tags:
+    - jenkins-docker

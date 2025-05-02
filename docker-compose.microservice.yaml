@@ -1,0 +1,50 @@
+services:
+  railsfrontend:
+    container_name: frontend_rails
+    build:
+      context: ./rails-service
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - PYTHON_SERVICE_HOST=pythonapi
+      - PYTHON_SERVICE_PORT=8890
+      - GO_SERVICE_HOST=gobackend
+    networks:
+      - microservice
+    # volumes:
+    #   - ./rails-service/app:/app
+
+  pythonapi:
+    container_name: python_api
+    build:
+      context: ./python-service
+      dockerfile: Dockerfile
+    ports:
+      - "8890:8890"
+    environment:
+      - GO_SERVICE_HOST=gobackend
+      - GO_SERVICE_PORT=8080
+    networks:
+      - microservice
+    volumes:
+      - ./python-service:/app
+
+  gobackend:
+    container_name: go_backend
+    build:
+      context: ./go-service
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - RAILS_SERVICE_HOST=railsfrontend
+      - RAILS_SERVICE_PORT=3000
+    networks:
+      - microservice
+    volumes:
+      - ./go-service:/app
+
+networks:
+  microservice:
+    driver: bridge

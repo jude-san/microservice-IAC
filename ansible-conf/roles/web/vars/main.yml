@@ -1,0 +1,8 @@
+---
+# vars file for roles/web
+web_nginx_version: "latest"
+
+docker_enabled: false
+kubernetes_enabled: false
+docker_version: "latest"
+ansible_user: ubuntu

@@ -1,0 +1,30 @@
+railsService:
+  name: railsfrontend
+  image: # replace with repo name
+  tag: v1
+  replicas: 2
+  label:
+    app: rubyrails
+  namespace: default
+  port: 3000 # replace with port number
+
+
+pythonService:
+  name: pythonapi
+  image: # replace with repo name
+  tag: v1
+  replicas: 1
+  label:
+    app: api
+  namespace: default
+  port: 8890 # replace with port number
+
+goService:
+  name: goservice
+  image: # replace with repo name
+  tag: v1
+  replicas: 3
+  label:
+    app: goservice
+  namespace: default
+  port: 8080 # replace with port number
