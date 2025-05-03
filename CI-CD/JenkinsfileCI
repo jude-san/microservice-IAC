@@ -36,9 +36,9 @@ pipeline{
                 stage('building Go image'){
                     steps{
                         echo 'Creating php build...'
-                        dir('back-end') {
+                        dir('go-service') {
                             sh '''
-                                docker buildx build -t ${GO_IMAGE}:${VERSION} ./go-service
+                                docker buildx build -t ${GO_IMAGE}:${VERSION} .
                             '''
                         }
                     }
@@ -49,9 +49,9 @@ pipeline{
                 stage('building Rails image'){
                     steps{
                         echo 'Creating node build...'
-                        dir('front-end') {
+                        dir('rails-service') {
                             sh '''
-                                docker buildx build -t ${RAILS_IMAGE}:${VERSION} ./rails-service
+                                docker buildx build -t ${RAILS_IMAGE}:${VERSION} .
                             '''
                         }
                     }
