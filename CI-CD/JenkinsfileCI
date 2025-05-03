@@ -1,0 +1,100 @@
+pipeline{
+    agent any
+
+    environment {
+        // DockerHub credentials and repository info
+        DOCKER_HUB_CREDS = credentials('dockerhub-credentials')
+        DOCKER_HUB_REPO = 'judekhay'  // Replace with your DockerHub username
+
+        // Image names and tags
+        // API_IMAGE = "${DOCKER_HUB_REPO}/CLM-api"
+        GO_IMAGE = "${DOCKER_HUB_REPO}/Go-service"  // Go-service
+        RAILS_IMAGE = "${DOCKER_HUB_REPO}/rails-service"  // Rails service
+        PYTHON_IMAGE = "${DOCKER_HUB_REPO}/pythonapi-service"  // pythonapi service
+
+        // Version tag based on build number
+        VERSION = "v0.0.${BUILD_NUMBER}"
+
+        // Dev server SSH details
+
+        SSH_KEY = credentials('ec2-key')
+
+        DEV_SERVER = 'ubuntu@3.93.10.172'
+    }
+
+
+    stages{
+
+        stage('checkout'){
+            steps{
+                checkout scm
+            }
+        }
+
+        stage('Building Images...'){
+            parallel{
+                stage('building Go image'){
+                    steps{
+                        echo 'Creating php build...'
+                        dir('back-end') {
+                            sh '''
+                                docker buildx build -t ${GO_IMAGE}:${VERSION} ./go-service
+                            '''
+                        }
+                    }
+                }
+
+
+                stage('building Rails image'){
+                    steps{
+                        echo 'Creating node build...'
+                        dir('front-end') {
+                            sh '''
+                                docker buildx build -t ${RAILS_IMAGE}:${VERSION} ./rails-service
+                            '''
+                        }
+                    }
+                }
+
+
+                stage('building Python image'){
+                    steps{
+                        echo 'Creating nginx build...'
+                            sh '''
+                                docker buildx build -t ${PYTHON_IMAGE}:${VERSION} ./pytno-service
+                            '''
+                    }
+                }
+            }
+        }
+
+        stage('Pushing Images...'){
+            steps{
+                // Login to DockerHub
+                sh 'echo ${DOCKER_HUB_CREDS_PSW} | docker login -u ${DOCKER_HUB_CREDS_USR} --password-stdin'
+
+                sh '''
+                    docker push ${GO_IMAGE}:${VERSION}
+                    docker push ${RAILS_IMAGE}:${VERSION}
+                    docker push ${PYTHON_IMAGE}:${VERSION}
+                '''
+
+                echo 'Images pushed to DockerHub!'
+
+            }
+        }
+    }
+
+    post {
+        always {
+            sh '''
+                # Clean up Docker images to save space
+                docker rmi ${GO_IMAGE}:${VERSION} || true
+                docker rmi ${RAILS_IMAGE}:${VERSION} || true
+                docker rmi ${PYTHON_IMAGE}:${VERSION} || true
+            '''
+
+            sh 'docker logout'
+        }
+    }
+}

@@ -1,0 +1,115 @@
+// This is template for a Jenkins pipeline that builds and deploys a multi-service application using Docker and Docker Compose.
+// It includes stages for building Docker images for a Go service, a Rails service, and a Python API service, pushing the images to DockerHub, and deploying the application to a development server using SSH and Docker Compose.
+
+// P.s: NOT READY working on it.
+
+pipeline {
+    agent any
+
+    environment {
+        // DockerHub credentials and repository info
+        DOCKER_HUB_CREDS = credentials('dockerhub-credentials')
+        DOCKER_HUB_REPO = 'judekhay'  // Replace with your DockerHub username
+
+        // Image names and tags
+        GO_IMAGE = "${DOCKER_HUB_REPO}/Go-service"  // Go-service API
+        RAILS_IMAGE = "${DOCKER_HUB_REPO}/rails-service"  // Rails service  BACKEND
+        PYTHON_IMAGE = "${DOCKER_HUB_REPO}/pythonapi-service"  // pythonapi service FROntEND
+
+
+        // Version tag based on build number
+        VERSION = "v0.0.${BUILD_NUMBER}"
+
+        // Dev server SSH details
+
+        SSH_KEY = credentials('ec2-key')
+
+        DEV_SERVER = 'ubuntu@3.93.10.172'
+    }
+
+    stages {
+        stage('Preparing deployments to Dev environment') {
+                steps {
+                    echo 'Deploying to staging environment ...'
+                    // Example deployment using docker-compose
+                    sh '''
+                    cat << "EOF" > docker-compose.staging.yml
+
+services:
+  railsfrontend:
+    container_name: frontend_rails
+    image: ${RAILS_IMAGE}:${VERSION}
+    ports:
+      - "3000:3000"
+    environment:
+      - PYTHON_SERVICE_HOST=pythonapi
+      - PYTHON_SERVICE_PORT=8890
+      - GO_SERVICE_HOST=gobackend
+    networks:
+      - microservice
+    # volumes:
+    #   - ./rails-service/app:/app
+
+  pythonapi:
+    container_name: python_api
+    image: ${PYTHON_IMAGE}:${VERSION}
+    ports:
+      - "8890:8890"
+    environment:
+      - GO_SERVICE_HOST=gobackend
+      - GO_SERVICE_PORT=8080
+    networks:
+      - microservice
+    volumes:
+      - ./python-service:/app
+
+  gobackend:
+    container_name: go_backend
+    image: ${GO_IMAGE}:${VERSION}
+    ports:
+      - "8080:8080"
+    environment:
+      - RAILS_SERVICE_HOST=railsfrontend
+      - RAILS_SERVICE_PORT=3000
+    networks:
+      - microservice
+    volumes:
+      - ./go-service:/app
+
+networks:
+  microservice:
+    driver: bridge
+
+
+EOF
+                    '''
+                }
+        }
+        stage('Deploying .....') {
+                steps {
+                        sh '''
+                        # Write the private key to a temporary file
+                        cat ${SSH_KEY}  > /tmp/private_key.pem
+                        chmod 600 /tmp/private_key.pem
+
+                        [ -d ~/.ssh ] || mkdir ~/.ssh && chmod 0755 ~/.ssh
+                        ssh-keyscan -t rsa,dsa 3.93.10.172 >> ~/.ssh/known_hosts
+
+                        ssh -i /tmp/private_key.pem ${DEV_SERVER} 'mkdir -p /home/ubuntu/bankingApp'
+
+                        scp -i /tmp/private_key.pem docker-compose.staging.yml ${DEV_SERVER}:/home/ubuntu/bankingApp
+
+                        # Run the docker-compose command on the remote server with environment variables
+
+                        ssh -i /tmp/private_key.pem ${DEV_SERVER} "cd /home/ubuntu/bankingApp && \
+                        export GO_IMAGE=${GO_IMAGE} && \
+                        export PYTHON_IMAGE=${PYTHON_IMAGE} && \
+                        export RAILS_IMAGE=${RAILS_IMAGE} && \
+                        export VERSION=${VERSION} && \
+                        sudo -E docker compose -f docker-compose.staging.yml up -d"
+
+                        '''
+                }
+        }
+    }
+}
