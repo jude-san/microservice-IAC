@@ -8,7 +8,7 @@ pipeline{
 
         // Image names and tags
         // API_IMAGE = "${DOCKER_HUB_REPO}/CLM-api"
-        GO_IMAGE = "${DOCKER_HUB_REPO}/Go-service"  // Go-service
+        GO_IMAGE = "${DOCKER_HUB_REPO}/go-service"  // Go-service
         RAILS_IMAGE = "${DOCKER_HUB_REPO}/rails-service"  // Rails service
         PYTHON_IMAGE = "${DOCKER_HUB_REPO}/pythonapi-service"  // pythonapi service
 
@@ -43,7 +43,7 @@ pipeline{
                         }
                     }
                 }
-                
+
 
 
                 stage('building Rails image'){
@@ -62,7 +62,7 @@ pipeline{
                     steps{
                         echo 'Creating nginx build...'
                             sh '''
-                                docker buildx build -t ${PYTHON_IMAGE}:${VERSION} ./pytno-service
+                                docker buildx build -t ${PYTHON_IMAGE}:${VERSION} ./python-service
                             '''
                     }
                 }
