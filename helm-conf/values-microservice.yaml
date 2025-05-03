@@ -28,4 +28,4 @@ goService:
   namespace: default
   port: 8080 # replace with port number
 
-#  CLI command: helm install my-release-name ./mychartPATH
+#  CLI command: helm install my-release-name ./mychartPATH -f ./values-PATH

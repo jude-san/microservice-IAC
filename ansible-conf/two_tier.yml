@@ -1,3 +1,0 @@
-- ansible.builtin.import_playbook: common.yml
-- ansible.builtin.import_playbook: web.yml
-- ansible.builtin.import_playbook: applications.yml
