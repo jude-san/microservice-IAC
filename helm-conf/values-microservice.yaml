@@ -1,18 +1,17 @@
 railsService:
   name: railsfrontend
-  image: # replace with repo name
-  tag: v1
+  image: judekhay/rails-service # replace with repo name
+  tag: v0.0.3
   replicas: 2
   label:
     app: rubyrails
   namespace: default
   port: 3000 # replace with port number
 
-
 pythonService:
   name: pythonapi
-  image: # replace with repo name
-  tag: v1
+  image: judekhay/pythonapi-service # replace with repo name
+  tag: v0.0.3
   replicas: 1
   label:
     app: api
@@ -21,10 +20,12 @@ pythonService:
 
 goService:
   name: goservice
-  image: # replace with repo name
-  tag: v1
+  image: judekhay/go-service # replace with repo name
+  tag: v0.0.3
   replicas: 3
   label:
     app: goservice
   namespace: default
   port: 8080 # replace with port number
+
+#  CLI command: helm install my-release-name ./mychartPATH
